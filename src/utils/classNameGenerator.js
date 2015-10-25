@@ -1,5 +1,5 @@
 // create an array with available characters to be used as a className
-const CHARS = 'qwertyuiopasdfghjklzxcvbnm_'.split('');
+const CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'.split('');
 const CHARS_NUM = CHARS.length;
 
 export default () => {
