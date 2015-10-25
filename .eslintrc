@@ -1,0 +1,18 @@
+{
+    "ecmaFeatures": {
+        "objectLiteralShorthandMethods": true,
+        "objectLiteralComputedProperties": true,
+        "arrowFunctions": true,
+        "experimentalObjectRestSpread": true,
+        "blockBindings": true,
+        "defaultParams": true,
+        "destructuring": true,
+        "restParams": true,
+        "modules": true,
+        "classes": true,
+        "jsx": true
+    },
+    "rules": {
+        "semi": 2
+    }
+}
