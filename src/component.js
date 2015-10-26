@@ -1,4 +1,4 @@
-
+import store from './store';
 
 export default function StyledComponent(modifyComputedStyleFn){
 	return Component => (props, ctx) => {
@@ -9,17 +9,12 @@ export default function StyledComponent(modifyComputedStyleFn){
 		var newStyle = browserify(style);
 		
 		// apply user-defined changes to the computed style
-		newStyle = modifyComputedStyleFn(newStyle);
+		newStyle = modifyComputedStyleFn(newStyle, props);
+
+		// convert style declarations into a className or style definition
+		var {classNames, style} = store.process(newStyle);
 		
-		// if is in server, return className, on client, use inline styles
-		if(ctx.styleSheetStorage){
-			// convert style declarations into a className definition
-			var classNames = ctx.styleSheetStorage.getClassNamesFor(newStyle);
-			// return the wrapped component
-			return <Component {...props} className={classNames.join(' ')} />;
-		}else{
-			// apply the merged style to the wrapped component
-			return <Component {...props} style={newStyle} />;
-		}
+		// return the wrapped component
+		return <Component {...props} className={classNames.join(' ')} style={style} />;
 	};
 }

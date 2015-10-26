@@ -2,9 +2,9 @@
 const CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'.split('');
 const CHARS_NUM = CHARS.length;
 
-export default () => {
+export default (startIndex = [0]) => {
 	// store the next index
-	var nextIndex = [0];
+	var nextIndex = startIndex;
 	// returns the function that gives a new id
 	return () => {
 		// calculate the new id

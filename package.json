@@ -1,0 +1,38 @@
+{
+  "name": "react-native-for-web-stylesheet",
+  "version": "0.0.1",
+  "description": "Reuse your React Native styles inside your React DOM application!",
+  "main": "lib/index.js",
+  "jsnext:main": "src/index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "build:lib": "babel src --out-dir lib",
+    "build": "npm run build:lib",
+    "prepublish": "npm run clean && npm run build",
+    "version": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KodersLab/react-native-for-web-stylesheet.git"
+  },
+  "keywords": [
+    "css-in-js",
+    "react-native",
+    "react-dom",
+    "stylesheet",
+    "css",
+    "react-native-for-web"
+  ],
+  "author": "KodersLab",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KodersLab/react-native-for-web-stylesheet/issues"
+  },
+  "homepage": "https://github.com/KodersLab/react-native-for-web-stylesheet#readme",
+  "dependencies": {
+    "lodash.isequal": "^3.0.4"
+  }
+}
