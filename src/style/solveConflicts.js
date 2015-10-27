@@ -13,7 +13,7 @@ var mayConflictProps = {
 	borderRadius: ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius']
 }
 
-module.exports = (style) => {
+export default (style) => {
 	// create a new style object
 	var solvedStyle = {};
 	// loop through properties

@@ -2,9 +2,10 @@ import classNameGenerator from './utils/classNameGenerator';
 import isEqual from 'lodash.isequal';
 
 // storage and classNameGenerator
-var newClassName = classNameGenerator();
 export var classesStore = {};
-var isStoreLocked = true;
+export var newClassName = classNameGenerator();
+var isStoreLocked = false;
+var avoidClassNames = false;
 
 // switch locking of the classNames store
 export function lock(){
@@ -15,6 +16,14 @@ export function unlock(){
 	isStoreLocked = false;
 }
 
+export function disableClassNames(){
+	avoidClassNames = true;
+}
+
+export function enableClassNames(){
+	avoidClassNames = false;
+}
+
 // put or pick properties
 export function put(propertyName, value){
 	// does it already exists? if so, return
@@ -23,39 +32,42 @@ export function put(propertyName, value){
 	// if store is locked, do not allow insertion
 	if(isStoreLocked) return;
 	// ensure the property it's created and exists
-	classesStore[propertyName] = classesStore[propertyName] || [];
-	// prepare the item to store
-	item = {
-		value,
-		className: newClassName()
-	};
-	// assing the value as a key, and as value generate a new className
-	classesStore[propertyName].push(item);
+	classesStore[propertyName] = classesStore[propertyName] || {};
+	// assing the className as a key, and as value the actual value
+	classesStore[propertyName][newClassName()] = value;
 	// return the just assigned item
 	return item;
 }
 
-// get the store item for given propertyName and value
+// get the className for given propertyName and value, or null if not found
 export function find(propertyName, value){
-	var possibleClassNames = (classesStore[propertyName] || []).filter(item => isEqual(item.value, value));
-	return possibleClassNames.length > 0 ? possibleClassNames[0] : null;
+	// if avoid classNames is on, find will always be unsuccessfull
+	
+	// attempt to find the className
+	var classNames = Object.keys(classesStore[propertyName] || {}).filter(className => isEqual(classesStore[propertyName][className], value));
+	return classNames.length > 0 ? classNames[0] : null;
 }
 
 export function process(mergedStyle){
 	// get merged style keys
 	var style = {};
 	var classNames = [];
-	// loop through
+	// if avoidClassNames is enabled, avoid attempt to search className
+	if(avoidClassNames){
+		return {
+			style: mergedStyle,
+			classNames
+		};
+	}
+	// attempt to find classNames where possible
 	Object.keys(mergedStyle).map(propertyName => {
 		var value = mergedStyle[propertyName];
 		// does the class already exists?
-		var item = put(propertyName, value);
+		var className = find(propertyName, value);
 		// if a class name exists, apply it
-		if(item){
-			// extract the class name and push it into the classNames stack
-			var {className} = item;
+		if(className){
 			classNames.push(className);
-		// if no class name exists, then
+		// if no class name exists, then fall back over inline property
 		}else{
 			style[propertyName] = value;
 		}
