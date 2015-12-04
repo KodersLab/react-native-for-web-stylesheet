@@ -1,10 +1,8 @@
-var StyleSheetPlugin = require('../lib/webpack');
+var StyleSheetPlugin = require('../webpack-plugin');
 
 module.exports = {
     context: __dirname,
-    entry: {
-        'index': ['./src/index.js']
-    },
+    entry: __dirname + '/src/index.js',
     devtool: "source-map",
     output: {
         path: __dirname,

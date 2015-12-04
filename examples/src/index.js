@@ -1,4 +1,4 @@
-var StyleSheet = require('../lib');
+var StyleSheet = require('../../lib');
 
 // now you can create the styles
 var styles = StyleSheet.create({
@@ -36,5 +36,4 @@ var styles = StyleSheet.create({
   }
 });
 
-console.log(StyleSheet.resolve([styles.profilePicture, {marginBottom: 100}]));
-console.log(StyleSheet.renderToString());
+console.log(StyleSheet.resolve([styles.card, styles.profilePicture, {marginBottom: 100}]));

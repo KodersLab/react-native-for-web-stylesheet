@@ -8,7 +8,7 @@ export function pick(propName, propValue){
 	var possibleClassIds = Object.keys(storage[propName] || {})
 		.filter(classId => isEqual(storage[propName][classId], propValue));
 		
-	return possibleClassIds.length > 0 ? possibleClassIds[0] : null;
+	return possibleClassIds.length > 0 ? parseInt(possibleClassIds[0], 10) : null;
 }
 
 // sets the classId

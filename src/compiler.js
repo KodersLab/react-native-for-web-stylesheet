@@ -15,7 +15,7 @@ function cssPropValue(propName, propValue){
 }
 
 export function classNameFor(classId, propName, propValue){
-	return '_' + (parseInt(classId, 10).toString(36));
+	return '_' + classId.toString(36);
 }
 
 export function ruleFor(classId, propName, propValue){

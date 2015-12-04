@@ -69,7 +69,7 @@ export function renderToString(){
 		.map(propName => 
 			Object.keys(storage[propName])
 				.map(classId => {
-					return ruleFor(classId, propName, storage[propName][classId]);
+					return ruleFor(parseInt(classId, 10), propName, storage[propName][classId]);
 				})
 		)
 		.reduce((rules, rule) => rules.concat(rule), [])

@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "rimraf lib",
     "build:lib": "babel src --out-dir lib",
+    "build:example": "npm run build && cd examples && webpack && cd ..",
     "build": "npm run build:lib",
     "prepublish": "npm run clean && npm run build",
     "version": "npm run build"
@@ -32,9 +33,12 @@
     "lodash.isequal": "^3.0.4"
   },
   "devDependencies": {
+    "autoprefixer": "^6.1.2",
     "babel-cli": "^6.3.13",
+    "babel-loader": "^6.2.0",
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-stage-1": "^6.3.13",
+    "postcss": "^5.0.12",
     "rimraf": "^2.4.4"
   }
 }
