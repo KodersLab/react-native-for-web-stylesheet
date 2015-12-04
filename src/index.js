@@ -79,3 +79,11 @@ export function renderToString(){
 export function renderToStyleNode(styleNode){
 	styleNode.textContent = renderToString();
 }
+
+export default {
+	subscribe,
+	create,
+	resolve,
+	renderToString,
+	renderToStyleNode
+}

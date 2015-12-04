@@ -247,6 +247,14 @@
 	function renderToStyleNode(styleNode) {
 		styleNode.textContent = renderToString();
 	}
+	
+	exports.default = {
+		subscribe: subscribe,
+		create: create,
+		resolve: resolve,
+		renderToString: renderToString,
+		renderToStyleNode: renderToStyleNode
+	};
 
 /***/ },
 /* 2 */

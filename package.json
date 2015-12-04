@@ -1,6 +1,6 @@
 {
   "name": "react-native-for-web-stylesheet",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Reuse your React Native styles inside your React DOM application!",
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
