@@ -1,23 +1,22 @@
+var StyleSheetPlugin = require('../lib/webpack');
+
 module.exports = {
     context: __dirname,
     entry: {
-        'index': ['./index.js']
+        'index': ['./src/index.js']
     },
     devtool: "source-map",
     output: {
         path: __dirname,
-        filename: "bundle.web.js",
-        sourceMapFilename: "bundle.web.map"
+        filename: "index.js",
+        sourceMapFilename: "index.map"
     },
-    resolve: {
-      alias: {
-        // this is just for example sake, when installing via npm it will not be necessary  
-        "react-native-for-web-stylesheet": __dirname + "/../src/"
-      }
-    },
+
     module: {
         loaders: [
-            { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader?stage=1"}
+            { test: /\.js$/, loader: "babel-loader"}
         ]
-    }
+    },
+    
+    plugins: [new StyleSheetPlugin({filename: "app.css"})]
 };

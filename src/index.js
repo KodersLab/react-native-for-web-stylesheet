@@ -1,195 +1,81 @@
-import MemoryStorage from './storage/memory';
-import resolveMultiProperties from './style/resolveMultiProperties';
-import toStylesArray from './style/toStylesArray';
-import toCSS from './style/toCSS';
+import {pick, put, storage} from './storage';
+import {toArray, destruct} from './utils';
+import {classNameFor, ruleFor, browserify} from './compiler';
 
-// counter for classNameId is global to avoid collisions
-var lastClassNameId = 0;
+var listeners = [];
 
-// an helper function which takes a new id and then increments
-function newClassNameId(){
-	lastClassNameId++;
-	return lastClassNameId;
+export function subscribe(fn){
+	listeners.push(fn);
+	var isSubscribed = true;
+	
+	return function unsubscribe(){
+		if(!isSubscribed) return;
+		
+		isSubscribed = false;
+		var idx = listeners.indexOf(fn);
+		listeners.splice(idx, 1);
+	};
 }
 
-// the StyleSheet which should be instanciated
-export default class StyleSheet{
-	constructor(){
-		// create the store to be used
-		this._listeners = [];
-		this._overrides = {};
-		this._store = new MemoryStorage();
+export function create(styleSheet, styleSheetIds = {}){
+	Object.keys(styleSheet).forEach(className => {
+		var classRules = destruct(styleSheet[className]);
 		
-		this._blockElementClassNameId = newClassNameId();
-		this._inlineElementClassNameId = newClassNameId();
-	}
-	
-	// given property name and value, returns the class name
-	_classNameFor(classNameId, propertyName, value){
-		// if not, provide a short class name
-		return '_' + parseInt(classNameId, 10).toString(36);
-	}
-	
-	// subscribe to a stylesheet changed
-	subscribe(fn){
-		this._listeners.push(fn);
-		var isListening = true;
-		
-		return () => {
-			if(!isListening) return;
+		Object.keys(classRules).forEach(propName => {
 			
-			isListening = false;
-			var idx = this._listeners.indexOf(fn);
-			this._listeners.splice(idx, 1);
-		};
-	}
-	
-	override(propertyName, cssCodeFn){
-		this._overrides[propertyName] = cssCodeFn; // (classNameId, value) => cssCode
-	}
-	
-	create(styles){
-		// loop through definitions
-		for(var styleName in styles){
-			if(!styles.hasOwnProperty(styleName)) continue;
+			var propValue = classRules[propName];
+			var classId = (styleSheetIds[className] || {})[propName];
 			
-			// deconstruct and cache deconstructed if possible
-			var style = resolveMultiProperties(styles[styleName]);
+			if(classId) put(propName, propValue, classId);
+		})
+	});
+	
+	return styleSheet;
+}
 
-			// continue looping
-			for(var propertyName in style){
-				if(!style.hasOwnProperty(propertyName)) continue;
-				
-				// ...then store it!
-				this._store.put(newClassNameId(), propertyName, style[propertyName]);
+export function resolve(styles, changeStyle, changeClassNames){
+	var style = {}, classNames = [], mergedStyle, propValue, classId;
+	mergedStyle = toArray(styles)
+		.filter(style => !!style)
+		.reduce((merged, style) => ({...merged, ...style}), {});
+		
+	if(changeStyle) mergedStyle = changeStyle(mergedStyle);
+	
+	mergedStyle = destruct(mergedStyle);
+	
+	Object.keys(mergedStyle)
+		.forEach(propName => {
+			propValue = mergedStyle[propName];
+			classId = pick(propName, propValue);
+			
+			if(classId){
+				classNames.push(classNameFor(classId, propName, propValue));
+			}else{
+				style[propName] = propValue;
 			}
-		}
-		
-		// emit that the stylesheet changed
-		this._listeners.slice().forEach(listener => listener());
-		
-		// return anyway the styles
-		return styles;
-	}
-	
-	resolve(styles, options = {}){
-		// decode options
-		var {isBlockElement = true, modifyMergedStyle, modifyClassNameIds} = options;
-		
-		// attempt to merge given styles
-		var mergedStyle = toStylesArray(styles)
-			.reduce((mergedStyle, style) => ({...mergedStyle, ...style}), {});
-			
-		// call the user defined modifyMergedStyle
-		if(modifyMergedStyle) mergedStyle = modifyMergedStyle(mergedStyle);
-		
-		// deconstruct multi properties to their specific counterparts
-		mergedStyle = resolveMultiProperties(mergedStyle);
-		
-		// get class ids
-		var style = {};
-		var classNames = {};
-		Object.keys(mergedStyle)
-			.forEach(propertyName => {
-				// attempt to get the classNameId
-				var value = mergedStyle[propertyName];
-				var classNameId = this._store.pick(propertyName, value);
-				// if it is not found, fall back to an inline style.
-				if(classNameId === null){
-					style[propertyName] = value;
-				// or return the className
-				}else{
-					classNames[classNameId] = {propertyName, value};
-				}
-			});
-			
-		// if isBlockElement or isInlineElement, append the block element class
-		if(isBlockElement){
-			classNames[this._blockElementClassNameId] = {};	
-		}else{
-			classNames[this._inlineElementClassNameId] = {};
-		}
-				
-		// call the user defined modifyClassNames
-		if(modifyClassNameIds) classNames = modifyClassNameIds(classNames);
-		
-		// get the actual classNames
-		classNames = Object.keys(classNames)
-			.map(classNameId => this._classNameFor(classNameId, classNames[classNameId].propertyName, classNames[classNameId].value));
-		
-		// returns the className and the style object
-		return {
-			className: classNames.join(' '),
-			style
-		};
-	}
-	
-	renderToString(){
-		var rules = [];
-		
-		// prepend the inline and the block element classes
-		var blockElementClassName = this._classNameFor(this._blockElementClassNameId);
-		var inlineElementClassName = this._classNameFor(this._inlineElementClassNameId);
-		
-		// push to the rules
-		rules.push(`
-		html, body, #app{
-			margin: 0;
-			padding: 0;
-			
-			font-family: Helvetica;
-			font-size: 14px;
-			font-weight: 100;
-			
-			width: 100%;
-			height: 100%;
-			display: flex;
-			flex-direction: column;
-			overflow: hidden;
-		}
-		
-		.${blockElementClassName}{
-			box-sizing: border-box;
-			position: relative;
-			border: 0 solid black;
-			margin: 0;
-			padding: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: stretch;
-			justify-content: flex-start;
-			flex: 0 0 auto;
-			
-			background-color: transparent;
-			color: inherit;
-			font: inherit;
-			text-align: inherit;
-		}
-		.${inlineElementClassName}{display: inline-block}
-		`);
-		
-		// get the current dump
-		var storage = this._store.dump();
-		
-		// compile to a CSS string
-		Object.keys(storage).forEach(propertyName => {
-			Object.keys(storage[propertyName]).forEach(classNameId => {
-				var value = storage[propertyName][classNameId];
-				var className = this._classNameFor(classNameId, propertyName, value);
-				
-				if(typeof this._overrides[propertyName] !== 'undefined'){
-					rules.push(this._overrides[propertyName](className, classNameId, value));
-				}else{
-					rules.push('.' + className + '{' + toCSS(propertyName, value) + '}');
-				}
-			});
 		});
 		
-		return rules.join(' ');
-	}
+	if(changeClassNames) changeClassNames(classNames);
+	style = browserify(style);
 	
-	renderToStyleTag(styleNode){
-		// render the string of the stylesheet to the style tag
-		styleNode.textContent = this.renderToString();
+	return {
+		style,
+		className: classNames.join(' ')
 	}
+}
+
+export function renderToString(){
+	return Object.keys(storage)
+		.map(propName => 
+			Object.keys(storage[propName])
+				.map(classId => {
+					return ruleFor(classId, propName, storage[propName][classId]);
+				})
+		)
+		.reduce((rules, rule) => rules.concat(rule), [])
+		.join(' ');
+}
+
+export function renderToStyleNode(styleNode){
+	styleNode.textContent = renderToString();
 }
