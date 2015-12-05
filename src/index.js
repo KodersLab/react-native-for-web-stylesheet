@@ -2,6 +2,9 @@ import {pick, put, storage} from './storage';
 import {toArray, destruct} from './utils';
 import {classNameFor, ruleFor, browserify} from './compiler';
 
+var flexClassName = '__flex';
+var inlineClassName = '__inline';
+
 var listeners = [];
 
 export function subscribe(fn){
@@ -33,6 +36,24 @@ export function create(styleSheet, styleSheetIds = {}){
 	return styleSheet;
 }
 
+
+export function renderToString(){
+	return Object.keys(storage)
+		.map(propName => 
+			Object.keys(storage[propName])
+				.map(classId => {
+					classId = parseInt(classId, 10);
+					return ruleFor(classId, propName, storage[propName][classId]);
+				})
+		)
+		.reduce((rules, rule) => rules.concat(rule), [])
+		.join(' ');
+}
+
+export function renderToStyleNode(styleNode){
+	styleNode.textContent = renderToString();
+}
+
 export function resolve(styles, changeStyle, changeClassNames){
 	var style = {}, classNames = [], mergedStyle, propValue, classId;
 	mergedStyle = toArray(styles)
@@ -55,7 +76,7 @@ export function resolve(styles, changeStyle, changeClassNames){
 			}
 		});
 		
-	if(changeClassNames) changeClassNames(classNames);
+	if(changeClassNames) classNames = changeClassNames(classNames);
 	style = browserify(style);
 	
 	return {
@@ -64,26 +85,14 @@ export function resolve(styles, changeStyle, changeClassNames){
 	}
 }
 
-export function renderToString(){
-	return Object.keys(storage)
-		.map(propName => 
-			Object.keys(storage[propName])
-				.map(classId => {
-					return ruleFor(parseInt(classId, 10), propName, storage[propName][classId]);
-				})
-		)
-		.reduce((rules, rule) => rules.concat(rule), [])
-		.join(' ');
+export function styleForFlex(styles, changeStyle){
+	return resolve(styles, changeStyle, (classNames) => [flexClassName].concat(classNames));
 }
 
-export function renderToStyleNode(styleNode){
-	styleNode.textContent = renderToString();
+export function styleForInline(styles, changeStyle){
+	return resolve(styles, changeStyle, (classNames) => [inlineClassName].concat(classNames));	
 }
 
 export default {
-	subscribe,
-	create,
-	resolve,
-	renderToString,
-	renderToStyleNode
+	create
 }

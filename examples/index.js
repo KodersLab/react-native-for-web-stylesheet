@@ -46,10 +46,14 @@
 
 	'use strict';
 	
-	var StyleSheet = __webpack_require__(1);
+	var _lib = __webpack_require__(1);
+	
+	var _lib2 = _interopRequireDefault(_lib);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	// now you can create the styles
-	var styles = StyleSheet.create({
+	var styles = _lib2.default.create({
 	  card: {
 	    margin: 15,
 	    padding: 8,
@@ -132,7 +136,8 @@
 	  }
 	});
 	
-	console.log(StyleSheet.resolve([styles.card, styles.profilePicture, { marginBottom: 100 }]));
+	console.log((0, _lib.styleForFlex)([styles.card, styles.profilePicture, { marginBottom: 100 }]));
+	console.log((0, _lib.styleForInline)([styles.bling, styles.profilePicture]));
 
 /***/ },
 /* 1 */
@@ -155,15 +160,20 @@
 	});
 	exports.subscribe = subscribe;
 	exports.create = create;
-	exports.resolve = resolve;
 	exports.renderToString = renderToString;
 	exports.renderToStyleNode = renderToStyleNode;
+	exports.resolve = resolve;
+	exports.styleForFlex = styleForFlex;
+	exports.styleForInline = styleForInline;
 	
 	var _storage = __webpack_require__(2);
 	
 	var _utils = __webpack_require__(11);
 	
 	var _compiler = __webpack_require__(13);
+	
+	var flexClassName = '__flex';
+	var inlineClassName = '__inline';
 	
 	var listeners = [];
 	
@@ -198,6 +208,21 @@
 		return styleSheet;
 	}
 	
+	function renderToString() {
+		return Object.keys(_storage.storage).map(function (propName) {
+			return Object.keys(_storage.storage[propName]).map(function (classId) {
+				classId = parseInt(classId, 10);
+				return (0, _compiler.ruleFor)(classId, propName, _storage.storage[propName][classId]);
+			});
+		}).reduce(function (rules, rule) {
+			return rules.concat(rule);
+		}, ['.' + flexClassName + '{\n\t\t\t\tbox-sizing: border-box;\n\t\t\t\tposition: relative;\n\t\t\t\tborder: 0 solid black;\n\t\t\t\tmargin: 0;\n\t\t\t\tpadding: 0;\n\t\t\t\tdisplay: flex;\n\t\t\t\tflex-direction: column;\n\t\t\t\talign-items: stretch;\n\t\t\t\tjustify-content: flex-start;\n\t\t\t\tflex: 0 0 auto;\n\t\t\t\t\n\t\t\t\tbackground-color: transparent;\n\t\t\t\tcolor: inherit;\n\t\t\t\tfont: inherit;\n\t\t\t\ttext-align: inherit;\n\t\t\t}', '.' + inlineClassName + '{\n\t\t\t\tdisplay: inline-block;\n\t\t\t\t\n\t\t\t\tbackground-color: transparent;\n\t\t\t\tcolor: inherit;\n\t\t\t\tfont: inherit;\n\t\t\t\ttext-align: inherit;\n\t\t\t}']).join(' ');
+	}
+	
+	function renderToStyleNode(styleNode) {
+		styleNode.textContent = renderToString();
+	}
+	
 	function resolve(styles, changeStyle, changeClassNames) {
 		var style = {},
 		    classNames = [],
@@ -225,7 +250,7 @@
 			}
 		});
 	
-		if (changeClassNames) changeClassNames(classNames);
+		if (changeClassNames) classNames = changeClassNames(classNames);
 		style = (0, _compiler.browserify)(style);
 	
 		return {
@@ -234,26 +259,20 @@
 		};
 	}
 	
-	function renderToString() {
-		return Object.keys(_storage.storage).map(function (propName) {
-			return Object.keys(_storage.storage[propName]).map(function (classId) {
-				return (0, _compiler.ruleFor)(parseInt(classId, 10), propName, _storage.storage[propName][classId]);
-			});
-		}).reduce(function (rules, rule) {
-			return rules.concat(rule);
-		}, []).join(' ');
+	function styleForFlex(styles, changeStyle) {
+		return resolve(styles, changeStyle, function (classNames) {
+			return [flexClassName].concat(classNames);
+		});
 	}
 	
-	function renderToStyleNode(styleNode) {
-		styleNode.textContent = renderToString();
+	function styleForInline(styles, changeStyle) {
+		return resolve(styles, changeStyle, function (classNames) {
+			return [inlineClassName].concat(classNames);
+		});
 	}
 	
 	exports.default = {
-		subscribe: subscribe,
-		create: create,
-		resolve: resolve,
-		renderToString: renderToString,
-		renderToStyleNode: renderToStyleNode
+		create: create
 	};
 
 /***/ },

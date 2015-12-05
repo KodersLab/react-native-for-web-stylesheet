@@ -7,6 +7,10 @@ Reuse your React Native styles inside your React DOM application!
 ```
 npm install react-native-for-web-stylesheet
 ```
+- Include in the header of your html file, or embed via your css compiler, the node_modules/react-native-for-web-stylesheet/base.css. This file contains the basic rules and properties that inline styles in JS may not support at the moment. (Just think about pointer events)
+- Choose between:
+	1. Render the stylesheet to a <style> tag using ```renderToStyleNode```.
+	2. Setup the babel and webpack plugins to export a separate CSS stylesheet file that can be cached by the client.
 
 ### Building the library
 Move into the package folder and run in your terminal:
